@@ -295,7 +295,7 @@ export default {
     // 기존소스
     // 초기 전국 시도 오버뷰 로딩 및 그리기
     loadProvinceOverviewGeoJson () {
-      fetch('/geojson/korea-provinces-overview.geojson') // 단순화된 시도 경계 데이터
+      fetch('./geojson/korea-provinces-overview.geojson') // 단순화된 시도 경계 데이터
         .then(response => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`)
