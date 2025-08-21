@@ -72,6 +72,7 @@
 
 <script>
 import axios from 'axios'
+import apiClient from '@/services/api';
 export default {
   globals: {
     kakao: 'readonly' // kakao를 전역 변수로 선언
@@ -212,7 +213,7 @@ export default {
 
     // 내 감정 데이터 로드 및 마커 생성 (기존 함수를 분리/수정)
     loadMyEmotions () {
-      axios.get('/api/travel-emotions')
+      apiClient.get('/api/travel-emotions')
         .then(response => {
           this.createMarkers(response.data, 'my')
           // 여기서 마커를 지도에 표시해줘야 해!
