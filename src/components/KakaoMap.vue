@@ -47,7 +47,7 @@
         <div v-if="selectedEmotion && selectedEmotion.imageUrl && selectedEmotion.imageUrl.length > 0" class="photo-slider">
           <div class="slider-image-wrapper">
             <!-- 이미지 표시 -->
-            <img :src="`/travel-emotion-map-frontend/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" />
+            <img :src="'/travel-emotion-map-frontend/images/${currentImageFilename}'" alt="여행 사진" class="slider-image" />
 
             <!-- 슬라이드 내비게이션 버튼 (화살표 아이콘 사용) -->
             <button v-if="imageFilenames.length > 1" @click="prevImage" class="nav-btn prev">
