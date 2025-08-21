@@ -72,7 +72,6 @@
 
 <script>
 import axios from 'axios'
-import apiClient from '@/services/api';
 export default {
   globals: {
     kakao: 'readonly' // kakao를 전역 변수로 선언
