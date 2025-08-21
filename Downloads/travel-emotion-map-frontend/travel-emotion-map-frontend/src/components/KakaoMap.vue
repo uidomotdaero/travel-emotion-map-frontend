@@ -4,7 +4,7 @@
         <button v-if="isRegionZoomed" @click="backToMainMap" class="back-to-main-button">
         <span role="img" aria-label="back">↩️</span> 전체 지도로 돌아가기
     </button>
-    <!-- *** 이 부분을 추가해주세요! 레이어 컨트롤 *** -->
+    <!-- *** 이 부분을 추가해주세요! 레이어 컨트롤   *** -->
    <div class="layer-controls">
       <div class="layer-toggle">
         <input type="radio" id="myLayerToggle" value="my" v-model="selectedLayer" @change="loadAndDisplayLayer">
@@ -20,9 +20,9 @@
         <input type="radio" id="subscriberLayerToggle" value="subscriber" disabled>
         <label for="subscriberLayerToggle" class="disabled-label">구독자 감정 스팟 (준비중)</label>
       </div>
-      <!-- 기타 레이어나 컨트롤이 있다면 추가 -->
+      <!-- 기타 레이어나 컨트롤이 있다면 추가   -->
    </div>
-    <!-- *** 여기까지 추가해주세요! *** -->
+    <!-- *** 여기까지 추가해주세요! ***  -->
     </div>
 
    <!-- 감정 상세 정보 모달 -->
