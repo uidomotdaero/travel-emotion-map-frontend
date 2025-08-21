@@ -47,7 +47,7 @@
         <div v-if="selectedEmotion && selectedEmotion.imageUrl && selectedEmotion.imageUrl.length > 0" class="photo-slider">
           <div class="slider-image-wrapper">
             <!-- 이미지 표시 -->
-            <img :src="'/images/' + currentImageFilename" alt="여행 사진" class="slider-image" />
+            <img :src="`/travel-emotion-map-frontend/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" />
 
             <!-- 슬라이드 내비게이션 버튼 (화살표 아이콘 사용) -->
             <button v-if="imageFilenames.length > 1" @click="prevImage" class="nav-btn prev">
@@ -213,9 +213,9 @@ export default {
     // 내 감정 데이터 로드 및 마커 생성 (기존 함수를 분리/수정)
     loadMyEmotions () {
       // local
-      // apiClient.get('/api/travel-emotions')
+      axios.get('/api/travel-emotions')
       // prod
-      axios.get('https://travel-emotion-map-backend.onrender.com/api/travel-emotions')
+      // axios.get('https://travel-emotion-map-backend.onrender.com/api/travel-emotions')
         .then(response => {
           this.createMarkers(response.data, 'my')
           // 여기서 마커를 지도에 표시해줘야 해!
@@ -248,14 +248,14 @@ export default {
         if (type === 'my') {
           // 주호의 마커 이미지 경로와 사이즈
           markerImage = new kakao.maps.MarkerImage(
-            '/images/my_marker.png', // 예시 경로, 실제 이미지 경로로 변경
+            '/travel-emotion-map-frontend/images/my_marker.png', // 예시 경로, 실제 이미지 경로로 변경
             markerSize
           )
           zIndex = 2 // 주호 마커를 더 위에
         } else if (type === 'subscriber') {
           // 구독자 마커 이미지 경로와 사이즈
           markerImage = new kakao.maps.MarkerImage(
-            '/images/subscriber_marker.png', // 예시 경로, 실제 이미지 경로로 변경
+            '/travel-emotion-map-frontend/images/subscriber_marker.png', // 예시 경로, 실제 이미지 경로로 변경
             new kakao.maps.Size(24, 24) // 주호 마커보다 작게
           )
           zIndex = 1 // 구독자 마커를 아래에
