@@ -1,0 +1,32 @@
+# .github/workflows/deploy-to-github-pages.yml
+name: Deploy Vue.js to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # 또는 master. 네 메인 브랜치 이름으로 변경!
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4 # 저장소 코드 체크아웃 (최신 버전 사용 권장)
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4 # Node.js 설정 (Node 버전은 네 프로젝트에 맞게 변경)
+        with:
+          node-version: '18' # 예시: Node.js 18 버전 사용. 실제 프로젝트 Node 버전에 맞춰줘!
+
+      - name: Install dependencies
+        run: npm install # 또는 npm install --legacy-peer-deps (필요시)
+
+      - name: Build Vue.js project
+        run: npm run build # package.json에 정의된 build 스크립트 실행
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3 # GitHub Pages 배포 액션 사용
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }} # 자동으로 제공되는 토큰 사용
+          publish_dir: ./docs # Vue.js 프로젝트의 빌드 결과물 폴더 (vue.config.js에서 설정한 outputDir)
