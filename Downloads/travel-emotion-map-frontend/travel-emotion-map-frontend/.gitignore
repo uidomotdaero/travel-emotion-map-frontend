@@ -1,0 +1,52 @@
+# Dependency directories
+node_modules/
+.pnpm-store/
+
+# Testing
+/coverage/
+/.nyc_output/
+/junit/
+
+# Production artifacts
+/dist/
+/build/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+/.sqlite/
+
+# Environment files
+.env
+.env.development
+.env.development.local
+.env.production
+.env.production.local
+.env.test
+.env.test.local
+
+# NPM related files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Other
+*.pid
+*.seed
+*.patch
+*.vspscc
+*.vssscc
+*.bak
+*.pyc
+*.swp
+*.swo
