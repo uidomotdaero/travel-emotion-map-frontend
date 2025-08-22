@@ -35,8 +35,22 @@
         <!-- 이름 정보 추가 -->
         <p class="author"><strong>작성자:</strong> {{ selectedEmotion.meName || '익명' }}</p>
         <div class="emotion-tags">
-          <span v-for="(tag, index) in emotionTagsArray" :key="index" class="tag">{{ tag }}</span>
+          <span v-for="(tag, index) in emotionTagsArray"
+          :key="index"
+          class="tag"
+          @click="highlightTag(index)">{{ tag }}</span>
         </div>
+
+        <!-- 모달 내 날씨 정보 표시 부분 수정 -->
+        <div class="weather-info" v-if="selectedEmotion && selectedEmotion.weatherCondition">
+          <div class="weather-icon">
+            <i :class="getWeatherIcon(selectedEmotion.weatherCondition)"></i>
+          </div>
+          <div class="weather-details">
+            <p class="weather-condition">{{ selectedEmotion.weatherCondition }}</p>
+          </div>
+        </div>
+
         <p class="review">{{ selectedEmotion.reviewText }}</p>
         <!-- 유튜브 영상이 있는 경우에만 표시 -->
         <div v-if="selectedEmotion.youtubeUrl" class="youtube-container">
@@ -45,7 +59,13 @@
         </div>
         <!-- 사진이 있으면 표시 -->
         <div v-if="selectedEmotion && selectedEmotion.imageUrl && selectedEmotion.imageUrl.length > 0" class="photo-slider">
-          <div class="slider-image-wrapper">
+          <div class="slider-image-wrapper" @mousedown="onDragStart"
+                                            @mouseup="onDragEnd"
+                                            @mouseleave="onDragEnd"
+                                            @mousemove="onDragMove"
+                                            @touchstart="onDragStart"
+                                            @touchend="onDragEnd"
+                                            @touchmove="onDragMove">
             <!-- 이미지 표시 -->
             <img :src="`/travel-emotion-map-frontend/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" />
 
@@ -63,6 +83,21 @@
             <span v-for="(_, index) in imageFilenames" :key="index"
                   :class="{'active-dot': currentImageIndex === index}"
                   @click="setCurrentImage(index)"></span>
+          </div>
+        </div>
+        <!-- 모달 하단에 공유하기 버튼 추가 -->
+        <div class="share-section" v-if="selectedEmotion">
+          <p class="share-title">이 감정 스팟 공유하기</p>
+          <div class="share-buttons">
+            <button @click="shareToKakao" class="share-btn kakao-btn" title="카카오톡 공유">
+              <i class="fas fa-comment"></i>
+            </button>
+            <button @click="shareToTwitter" class="share-btn twitter-btn" title="트위터 공유">
+              <i class="fab fa-twitter"></i>
+            </button>
+            <button @click="shareToFacebook" class="share-btn facebook-btn" title="페이스북 공유">
+              <i class="fab fa-facebook-f"></i>
+            </button>
           </div>
         </div>
     </div>
@@ -96,7 +131,13 @@ export default {
       selectedLayer: 'my', // 현재 선택된 레이어 (초기값: 내 감정 스팟)
       // 이미지슬라이드관련
       currentImageIndex: 0,
-      imageFilenames: []
+      imageFilenames: [],
+      // 기존 이미지 슬라이더 상태들..
+      isDragging: false,
+      dragStartX: 0,
+      dragEndX: 0,
+      // 기존 데이터...
+      linkCopied: false
     }
   },
   mounted () {
@@ -139,6 +180,73 @@ export default {
       // this.loadAndDisplayLayer()
     },
 
+    // 위도, 경도로 날씨 정보 가져오기
+    async fetchWeatherData (lat, lng) {
+      const API_KEY = '6b8d9db94d4b8a61b8d8a4c4e38edaa1' // API 키 발급 필요
+      try {
+        const response = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
+          params: {
+            lat: lat,
+            lon: lng,
+            appid: API_KEY,
+            units: 'metric', // 섭씨 온도
+            lang: 'kr' // 한국어 결과
+          }
+        })
+
+        return {
+          condition: response.data.weather[0].description,
+          temperature: Math.round(response.data.main.temp),
+          humidity: response.data.main.humidity,
+          windSpeed: response.data.wind.speed,
+          icon: response.data.weather[0].icon
+        }
+      } catch (error) {
+        console.error('날씨 정보를 가져오는 중 오류 발생:', error)
+        return null
+      }
+    },
+
+    // 감정 스팟 선택 시 날씨 정보도 함께 로드
+    async showEmotionDetails (emotion) {
+      this.selectedEmotion = { // 이렇게 바꿔주는 거지!
+        ...emotion,
+        weatherCondition: emotion.weatherCondition || '정보 없음'
+      }
+
+      // 이미 날씨 정보가 있으면 다시 요청하지 않음
+      if (!this.selectedEmotion.weatherInfo && this.selectedEmotion.lat && this.selectedEmotion.lng) {
+        const weatherInfo = await this.fetchWeatherData(
+          this.selectedEmotion.lat,
+          this.selectedEmotion.lng
+        )
+
+        if (weatherInfo) {
+          // Vue.set을 사용하여 반응성 유지
+          this.$set(this.selectedEmotion, 'weatherInfo', weatherInfo)
+        }
+      }
+    },
+
+    // 날씨 상태에 따른 아이콘 클래스 반환
+    getWeatherIcon (condition) {
+      // condition이 없을 경우 안전하게 처리
+      if (!condition) return 'fas fa-cloud'
+      // 날씨 상태에 따라 적절한 Font Awesome 아이콘 클래스 반환
+      switch (condition) {
+        case '맑음':
+          return 'fas fa-sun'
+        case '흐림':
+          return 'fas fa-cloud'
+        case '비':
+          return 'fas fa-cloud-rain'
+        case '눈':
+          return 'fas fa-snowflake'
+        default:
+          return 'fas fa-cloud'
+      }
+    },
+
     // 모달 열 때 이미지 배열 초기화
     setImageFilenames () {
       if (this.selectedEmotion && this.selectedEmotion.imageUrl) {
@@ -154,6 +262,28 @@ export default {
       if (this.imageFilenames.length > 0) {
         this.currentImageIndex = (this.currentImageIndex + 1) % this.imageFilenames.length
       }
+      // 먼저 현재 이미지 페이드 아웃
+      const imageElement = document.querySelector('.slider-image')
+      imageElement.style.opacity = '0'
+
+      // 페이드 아웃 후 이미지 변경
+      setTimeout(() => {
+        this.currentImageIndex = (this.currentImageIndex + 1) % this.imageFilenames.length
+        // 새 이미지 로드 후 페이드 인
+        setTimeout(() => {
+          imageElement.style.opacity = '1'
+        }, 50)
+      }, 200)
+    },
+
+    // 태그 클릭 시 강조 효과
+    highlightTag (index) {
+      const tagElements = document.querySelectorAll('.tag')
+      tagElements[index].classList.add('tag-highlight')
+
+      setTimeout(() => {
+        tagElements[index].classList.remove('tag-highlight')
+      }, 1000)
     },
 
     // 이전 이미지로
@@ -194,8 +324,6 @@ export default {
           if (type === 'my') {
             this.myEmotionsData = response.data
             this.createMarkers(this.myEmotionsData, 'my')
-            console.log('marker1::', this.myMarkers)
-            console.log('thisMap::', this.map)
             this.myMarkers.forEach(marker => marker.setMap(this.map)) // 현재 선택된 레이어만 표시
           } else if (type === 'subscriber') {
             this.subscriberEmotionsData = response.data
@@ -295,7 +423,58 @@ export default {
       })
     },
 
-    // 기존소스
+    // 카카오톡 공유
+    shareToKakao () {
+      // 카카오 SDK가 로드되었는지 확인
+      if (window.Kakao) {
+        if (!window.Kakao.isInitialized()) {
+          // 여기에 네 카카오 앱 키를 넣어야 해
+          window.Kakao.init('YOUR_KAKAO_APP_KEY')
+        }
+
+        window.Kakao.Link.sendDefault({
+          objectType: 'location',
+          address: this.selectedEmotion.locationName,
+          addressTitle: this.selectedEmotion.title,
+          content: {
+            title: this.selectedEmotion.title,
+            description: this.selectedEmotion.reviewText.substring(0, 80) + '...',
+            imageUrl: this.selectedEmotion.imageUrl ? '/images/' + this.selectedEmotion.imageUrl[0] : '',
+            link: {
+              mobileWebUrl: window.location.href,
+              webUrl: window.location.href
+            }
+          },
+          buttons: [
+            {
+              title: '감정 스팟 보기',
+              link: {
+                mobileWebUrl: window.location.href,
+                webUrl: window.location.href
+              }
+            }
+          ]
+        })
+      } else {
+        alert('카카오톡 공유 기능을 사용할 수 없습니다.')
+      }
+    },
+
+    // 트위터 공유
+    shareToTwitter () {
+      const text = `${this.selectedEmotion.title} - ${this.selectedEmotion.reviewText.substring(0, 50)}...`
+      const url = window.location.href
+      const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`
+      window.open(shareUrl, '_blank')
+    },
+
+    // 페이스북 공유
+    shareToFacebook () {
+      const url = window.location.href
+      const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+      window.open(shareUrl, '_blank')
+    },
+
     // 초기 전국 시도 오버뷰 로딩 및 그리기
     loadProvinceOverviewGeoJson () {
       fetch('./geojson/korea-provinces-overview.geojson') // 단순화된 시도 경계 데이터
@@ -307,7 +486,6 @@ export default {
         })
         .then(geojsonData => {
           this.provinceOverviewFeatures = geojsonData.features
-          console.log('시도 오버뷰 GeoJSON features 로드 완료:', this.provinceOverviewFeatures.length, '개')
           this.drawProvinceOverview() // 로드 완료 후 오버뷰 그리기
         })
         .catch(error => {
@@ -477,7 +655,6 @@ export default {
           })
         } else if (type === 'district') {
           window.kakao.maps.event.addListener(polygon, 'click', () => {
-            console.log('클릭한 시군구 상세:', feature.properties.adm_nm)
             // 여기에 해당 시군구의 감정 데이터 보여주기 등의 로직 추가
           })
         }
@@ -647,7 +824,6 @@ export default {
         .then(response => response.json())
         .then(data => {
         // 받아온 감정 데이터로 지도에 마커 표시
-          console.log('data ::', data)
           data.forEach(item => {
             // 마커 생성 시 감정 데이터 전체를 전달
             this.addEmotionMarker(
@@ -725,7 +901,6 @@ export default {
       const markerElement = customOverlay.a
       if (markerElement) {
         markerElement.onclick = () => {
-          console.log(`${lat}, ${lng}의 감정: ${emotionData} 마커 클릭됨!`)
           // 모달 표시
           this.loadAndDisplayLayer()
           this.showEmotionDetail(emotionData)
@@ -735,6 +910,8 @@ export default {
     // 마커 클릭 시 감정 데이터 표시
     showEmotionDetail (emotionData) {
       this.selectedEmotion = emotionData
+
+      this.showEmotionDetails(emotionData)
 
       // 이미지 URL 처리 추가
       if (emotionData.imageUrl && typeof emotionData.imageUrl === 'string' && emotionData.imageUrl.length > 0) {
@@ -754,6 +931,19 @@ export default {
     // 모달 닫기
     closeModal () {
       this.selectedEmotion = null
+      // 모달에 closing 클래스 추가
+      if (this.selectedEmotion) {
+        document.querySelector('.emotion-modal').classList.add('closing')
+
+        // 애니메이션 완료 후 모달 닫기
+        setTimeout(() => {
+          this.selectedEmotion = null
+          if (this.$refs.audioPlayer) {
+            this.$refs.audioPlayer.pause()
+            this.isPlaying = false
+          }
+        }, 300) // 애니메이션 시간과 동일하게
+      }
     },
     // 날짜 포맷 변환
     formatDate (dateString) {
@@ -773,6 +963,27 @@ export default {
         return `https://www.youtube.com/embed/${videoId.substring(0, ampersandPosition)}`
       }
       return `https://www.youtube.com/embed/${videoId}`
+    },
+    onDragStart (event) {
+      this.isDragging = true
+      this.dragStartX = event.type.includes('mouse') ? event.clientX : event.touches[0].clientX
+    },
+    onDragMove (event) {
+      if (!this.isDragging) return
+      this.dragEndX = event.type.includes('mouse') ? event.clientX : event.touches[0].clientX
+    },
+    onDragEnd () {
+      if (!this.isDragging) return
+      const dragDistance = this.dragEndX - this.dragStartX
+      const threshold = 50 // 드래그 인식 최소 거리(px)
+      if (dragDistance > threshold) {
+        this.prevImage() // 왼쪽에서 오른쪽으로 드래그 => 이전 이미지
+      } else if (dragDistance < -threshold) {
+        this.nextImage() // 오른쪽에서 왼쪽으로 드래그 => 다음 이미지
+      }
+      this.isDragging = false
+      this.dragStartX = 0
+      this.dragEndX = 0
     }
   },
   computed: {
@@ -802,6 +1013,17 @@ export default {
   height: 100%;
 }
 
+/* 모달 페이드인/아웃 애니메이션 */
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes modalFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-20px); }
+}
+
 /* *** 이 부분을 추가해주세요! 레이어 컨트롤 CSS *** */
 .layer-controls {
   position: absolute;
@@ -813,14 +1035,18 @@ export default {
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   z-index: 2;
-  display: flex;
   flex-direction: column;
-  gap: 10px;
+  margin: 15px 0;
+  display: flex;
+  gap: 20px;
 }
 
 .layer-toggle {
   display: flex;
   align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .layer-toggle input[type="checkbox"] {
@@ -837,6 +1063,15 @@ export default {
   outline: none; /* 클릭 시 아웃라인 제거 */
   position: relative; /* 체크 마크 위치 기준 */
   transition: all 0.2s ease-in-out;
+}
+
+.layer-toggle.disabled {
+  color: #999;
+  cursor: not-allowed;
+}
+
+.layer-toggle.disabled label {
+  cursor: not-allowed;
 }
 
 .layer-toggle input[type="checkbox"]:checked {
@@ -907,58 +1142,92 @@ export default {
 /* 모달 스타일 */
 .emotion-modal {
   position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  top: 0; left: 0; right:0; bottom: 0;
+  background: rgba(0,0,0,0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: flex-start;
+  padding: 40px;
+  overflow-y: auto;
+  z-index: 9999;
 }
 
 .emotion-modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px 30px;
   max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
   position: relative;
+  animation: modalFadeIn 0.3s ease forwards;
+}
+
+.emotion-modal.closing .emotion-modal-content {
+  animation: modalFadeOut 0.3s ease forwards;
+}
+
+.back-to-main-button {
+  transition: all 0.2s ease;
+  transform-origin: center;
+}
+
+.back-to-main-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .close-btn {
   position: absolute;
-  top: 10px;
-  right: 15px;
+  top: 16px;
+  right: 16px;
   font-size: 24px;
   cursor: pointer;
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #000;
+  transform: rotate(90deg);
 }
 
 .emotion-tags {
+  margin: 12px 0;
   display: flex;
+  gap: 10px;
   flex-wrap: wrap;
-  gap: 8px;
-  margin: 15px 0;
 }
 
 .tag {
-  background-color: #FF6B6B;
-  color: rgb(255, 0, 0);
-  padding: 5px 10px;
+  background: linear-gradient(45deg, #ff7675, #fd79a8);
+  padding: 6px 14px;
   border-radius: 20px;
-  font-size: 13px;
-  font-weight: bold;
+  font-weight: 600;
+  color: white;
+  cursor: default;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 이미지 로딩 효과 */
+@keyframes imageFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tag:hover {
+  transform: translateY(-3px) rotate(2deg);
+  box-shadow: 0 5px 15px rgba(253, 121, 168, 0.4);
 }
 
 .youtube-container {
   position: relative;
-  padding-bottom: 56.25%; /* 16:9 비율 */
+  padding-bottom: 56.25%; /* 16:9 */
   height: 0;
   overflow: hidden;
-  margin: 20px 0;
+  border-radius: 14px;
+  margin-top: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
 .youtube-container iframe {
@@ -967,6 +1236,7 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
+  border: none;
 }
 
 /* 기존 .photos는 이제 .photo-slider로 변경될 거예요. */
@@ -987,12 +1257,19 @@ export default {
   padding-top: 75%; /* 4:3 비율 유지 (너비 대비 높이 75% -> 높이 고정) */
   /* 또는 height: 450px; 등으로 고정 높이를 주어도 됨 (object-fit 주의) */
   overflow: hidden; /* 이미지가 이 영역을 벗어나지 않도록 */
-  border-radius: 10px; /* 모서리 둥글게 */
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15); /* 그림자 */
   background-color: #f0f0f0; /* 이미지가 로드되기 전 배경색 */
   display: flex; /* 이미지를 중앙 정렬하기 위해 */
   align-items: center; /* 이미지를 중앙 정렬하기 위해 */
   justify-content: center; /* 이미지를 중앙 정렬하기 위해 */
+  margin-top: 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  cursor: grab;
+  user-select: none; /* 드래그 시 텍스트 선택되는 거 방지 */
+}
+
+.slider-image-wrapper:active {
+  cursor: grabbing;
 }
 
 .slider-image {
@@ -1005,13 +1282,15 @@ export default {
   /* object-fit: cover;  이미지 잘릴 수 있지만 컨테이너를 꽉 채움 (원하는 방식 선택) */
   transition: transform 0.3s ease;
   padding: 10px; /* 이미지 자체에 살짝 패딩 줘서 컨테이너 엣지랑 분리 */
+  display: block;
+  border-radius: 12px;
+  animation: imageFadeIn 0.5s ease;
 }
 
 .nav-btn {
   position: absolute; /* slider-image-wrapper 내에서 절대 위치 */
   top: 50%; /* 수직 중앙 */
   transform: translateY(-50%); /* 정확히 중앙 정렬 */
-  background: rgba(0, 0, 0, 0.5); /* 어두운 반투명 배경 */
   color: white; /* 화살표 색상 */
   border: none;
   border-radius: 50%; /* 원형 버튼 */
@@ -1024,6 +1303,10 @@ export default {
   align-items: center;
   justify-content: center;
   transition: background 0.3s ease, transform 0.3s ease;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .nav-btn.prev {
@@ -1035,29 +1318,163 @@ export default {
 }
 
 .nav-btn:hover {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(255, 255, 255, 0.85);
   transform: translateY(-50%) scale(1.1); /* 호버 시 약간 커짐 */
 }
 
 .slider-dots {
   display: flex;
   justify-content: center;
-  margin-top: 15px; /* 이미지 영역 아래에 배치 */
+  margin-top: 12px; /* 이미지 영역 아래에 배치 */
   gap: 8px;
 }
 
 .slider-dots span {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background-color: #ddd;
+  background: #ccc;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .slider-dots span.active-dot {
-  background-color: #42b883; /* 활성 점 색상 */
+  background: #fd79a8;
   transform: scale(1.2);
 }
+
+/* 공유하기 버튼 스타일 */
+.share-section {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.share-title {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.share-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.share-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.share-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.kakao-btn {
+  background: #FEE500;
+  color: #3C1E1E;
+}
+
+.twitter-btn {
+  background: #1DA1F2;
+  color: white;
+}
+
+.facebook-btn {
+  background: #4267B2;
+  color: white;
+}
+
+.copy-btn {
+  background: white;
+  color: #4b5563;
+  position: relative;
+}
+
+.copy-tooltip {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  animation: fadeInOut 2s ease;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 추가 스타일 - 태그 강조 효과 */
+.tag-highlight {
+  background: linear-gradient(45deg, #e84393, #fd79a8);
+  transform: scale(1.1);
+}
+
+/* 부드러운 스크롤 효과 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 버튼 클릭 효과 */
+.play-btn:active, .volume-btn:active, .share-btn:active {
+  transform: scale(0.95);
+}
+
+/* 로딩 상태를 위한 스켈레톤 효과 */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+/* 간소화된 날씨 스타일 */
+.weather-info {
+  display: flex;
+  align-items: center;
+  margin: 12px 0;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 10px;
+}
+
+.weather-icon {
+  font-size: 24px;
+  margin-right: 10px;
+}
+
+.weather-condition {
+  font-weight: 600;
+  margin: 0;
+}
+
+/* 날씨별 아이콘 색상 */
+.fa-sun { color: #ff9900; }
+.fa-cloud { color: #6c757d; }
+.fa-cloud-rain { color: #0099cc; }
+.fa-snowflake { color: #99ccff; }
 
 </style>
