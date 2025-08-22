@@ -215,7 +215,7 @@ export default {
       // local
       // axios.get('/api/travel-emotions')
       // prod
-       axios.get('https://travel-emotion-map-backend.onrender.com/api/travel-emotions')
+      axios.get('https://travel-emotion-map-backend.onrender.com/api/travel-emotions')
         .then(response => {
           this.createMarkers(response.data, 'my')
           // 여기서 마커를 지도에 표시해줘야 해!
