@@ -23,7 +23,7 @@
       </div>
       <p class="update-info">
         이 지도는 항상 <strong>업데이트 예정입니다</strong>. <br>
-        <strong>마지막 업데이트: 2025. 8. 21.</strong><br><strong>새로운 기능</strong>과 여정으로 꾸준히 채워질 예정입니다.
+        <strong>마지막 업데이트: 2025. 8. 24.</strong><br><strong>새로운 기능</strong>과 여정으로 꾸준히 채워질 예정입니다.
       </p>
     </main>
   </div>
