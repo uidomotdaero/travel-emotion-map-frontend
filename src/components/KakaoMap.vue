@@ -258,6 +258,8 @@ export default {
 
     // 다음 이미지로
     nextImage () {
+      if (this.isTransitioning) return; // 전환 중이면 추가 클릭 무시
+      this.isTransitioning = true;
       if (this.imageFilenames.length > 0) {
         this.currentImageIndex = (this.currentImageIndex + 1) % this.imageFilenames.length
       }
@@ -287,6 +289,8 @@ export default {
 
     // 이전 이미지로
     prevImage () {
+      if (this.isTransitioning) return;
+      this.isTransitioning = true;
       if (this.imageFilenames.length > 0) {
         this.currentImageIndex = (this.currentImageIndex - 1 + this.imageFilenames.length) % this.imageFilenames.length
       }
