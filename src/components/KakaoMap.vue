@@ -365,9 +365,9 @@ export default {
     // 내 감정 데이터 로드 및 마커 생성 (기존 함수를 분리/수정)
     loadMyEmotions () {
       // local
-      // axios.get('/api/travel-emotions')
+      axios.get('/api/travel-emotions')
       // prod
-      axios.get('https://travel-emotion-map-backend.onrender.com/api/travel-emotions')
+      // axios.get('https://travel-emotion-map-backend.onrender.com/api/travel-emotions')
         .then(response => {
           this.createMarkers(response.data, 'my')
           // 여기서 마커를 지도에 표시해줘야 해!
@@ -1016,9 +1016,9 @@ export default {
     // ✨ 모달 열기 함수
     openImageModal (filename) {
       // 이미지가 public/images 폴더에 있다면 이렇게 경로를 구성
-      // this.modalImageUrl = `/images/${filename}`
+      this.modalImageUrl = `/images/${filename}`
       // 만약 GitHub Pages에서 `/travel-emotion-map-frontend/images/` 이런 경로를 사용한다면
-      this.modalImageUrl = `/travel-emotion-map-frontend/images/${filename}`
+      // this.modalImageUrl = `/travel-emotion-map-frontend/images/${filename}`
       this.showModal = true
     },
 
@@ -1186,7 +1186,7 @@ export default {
   align-items: flex-start;
   padding: 40px;
   overflow-y: auto;
-  z-index: 9999;
+  z-index: 2000;
 }
 
 .emotion-modal-content {
@@ -1524,8 +1524,7 @@ html {
   background-color: rgba(0, 0, 0, 0.8); /* 검정색 투명 배경 */
   display: flex;
   justify-content: center; /* 가로 중앙 정렬 유지 */
-  align-items: flex-start; /* ✨ 이걸 flex-start로 변경 */
-  padding-top: 10vh; /* ✨ 그리고 위에서부터 여백을 줘! */
+  align-items: center; /* ✨ 이걸 flex-start로 변경 */
   z-index: 9999;
 }
 
@@ -1537,6 +1536,7 @@ html {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 30vh; /* 화면 높이의 15% 만큼 아래로 */
 }
 
 /* modal-image: 확대된 이미지 */
