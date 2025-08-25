@@ -67,7 +67,7 @@
                                             @touchend="onDragEnd"
                                             @touchmove="onDragMove">
             <!-- 이미지 표시 -->
-            <img :src="`/travel-emotion-map-frontend/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" />
+            <img :src="`/travel-emotion-map-frontend/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" @click.stop="openImageModal(currentImageFilename)" />
             <!--<img :src="`/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" @click.stop="openImageModal(currentImageFilename)"/>-->
             <!-- 슬라이드 내비게이션 버튼 (화살표 아이콘 사용) -->
 
