@@ -1016,9 +1016,9 @@ export default {
     // ✨ 모달 열기 함수
     openImageModal (filename) {
       // 이미지가 public/images 폴더에 있다면 이렇게 경로를 구성
-      this.modalImageUrl = `/images/${filename}`
+      // this.modalImageUrl = `/images/${filename}`
       // 만약 GitHub Pages에서 `/travel-emotion-map-frontend/images/` 이런 경로를 사용한다면
-      // this.modalImageUrl = `/travel-emotion-map-frontend/images/${filename}`
+      this.modalImageUrl = `/travel-emotion-map-frontend/images/${filename}`
       this.showModal = true
     },
 
