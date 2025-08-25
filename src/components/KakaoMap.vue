@@ -429,7 +429,7 @@ export default {
       if (window.Kakao) {
         if (!window.Kakao.isInitialized()) {
           // 여기에 네 카카오 앱 키를 넣어야 해
-          window.Kakao.init('YOUR_KAKAO_APP_KEY')
+          window.Kakao.init('595fec59341e6b118c1f93b2426c80da')
         }
 
         window.Kakao.Link.sendDefault({
@@ -1188,9 +1188,9 @@ export default {
 }
 
 .emotion-tags {
-  margin: 12px 0;
+  margin: 10px 0;
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
