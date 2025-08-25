@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div id="map" style="width:100%; height:500px;">
+    <div id="map" class="map" style="width:100%; height:500px;">
         <button v-if="isRegionZoomed" @click="backToMainMap" class="back-to-main-button">
         <span role="img" aria-label="back">↩️</span> 전체 지도로 돌아가기
     </button>
@@ -530,7 +530,7 @@ export default {
 
       this.isRegionZoomed = false // 초기 화면이므로 확대 상태 아님
       this.map.setCenter(new window.kakao.maps.LatLng(36.2, 127.9))
-      this.map.setLevel(13)
+      this.map.setLevel(14)
     },
 
     // 시도 클릭 시 시군구 상세 로딩 및 그리기
@@ -1002,15 +1002,10 @@ export default {
 
 <style scoped>
 
-.map-container {
+#map {
   position: relative; /* 지도 컨테이너가 layer-controls의 기준이 됨 */
   width: 100%; /* 너비는 적절히 조절 */
-  height: 600px; /* 높이도 적절히 조절 */
-}
-
-#map {
-  width: 100%;
-  height: 100%;
+  height: 200%; /* 높이도 적절히 조절 */
 }
 
 /* 모달 페이드인/아웃 애니메이션 */
