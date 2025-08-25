@@ -58,7 +58,7 @@
 
 <div>
   <!-- 모달 열기 버튼 -->
-  <button @click="openModal">공지사항 보기</button>
+  <button @click="openModal" class="notice-button">공지사항 보기</button>
 
   <!-- 모달 창 -->
   <div v-if="showModal" class="modal-overlay">
@@ -540,5 +540,26 @@ p {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.notice-button {
+  background-color: #cf82ff; /* 보라색 계열 */
+  color: white;
+  padding: 6px 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer; /* 마우스 올리면 손가락 모양 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease; /* 부드러운 효과 */
+  display: block; /* 한 줄 전체 사용 */
+  margin: 20px auto; /* 중앙 정렬, 상하 여백 */
+}
+
+.notice-button:hover {
+  background-color: #8e24aa; /* 호버 시 색 변화 */
+  transform: translateY(-3px); /* 살짝 위로 */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* 그림자도 진하게 */
 }
 </style>
