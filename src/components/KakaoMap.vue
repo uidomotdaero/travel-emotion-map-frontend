@@ -67,7 +67,7 @@
                                             @touchend="onDragEnd"
                                             @touchmove="onDragMove">
             <!-- 이미지 표시 -->
-            <img :src="`${process.env.BASE_URL}images/${currentImageFilename}`" alt="여행 사진" class="slider-image" />
+            <img :src="`/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" />
             <!-- 슬라이드 내비게이션 버튼 (화살표 아이콘 사용) -->
             <button v-if="imageFilenames.length > 1" @click="prevImage" class="nav-btn prev">
               <i class="fas fa-chevron-left"></i> <!-- 이전 화살표 아이콘 -->
