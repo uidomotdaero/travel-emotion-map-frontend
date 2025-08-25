@@ -291,19 +291,20 @@ export default {
     prevImage () {
       if (this.isTransitioning) return
       this.isTransitioning = true
-      if (this.imageFilenames.length > 0) {
-        this.currentImageIndex = (this.currentImageIndex - 1 + this.imageFilenames.length) % this.imageFilenames.length
-      }
 
-      // 애니메이션 추가하고 전환 완료 표시
+      // 먼저 현재 이미지 페이드 아웃
       const imageElement = document.querySelector('.slider-image')
       imageElement.style.opacity = '0'
 
+      // 페이드 아웃 후 이미지 변경
       setTimeout(() => {
-        // 이미지 변경 후 페이드 인
+        // 이전 이미지로 인덱스 변경 (뒤로 가기)
+        this.currentImageIndex = (this.currentImageIndex - 1 + this.imageFilenames.length) % this.imageFilenames.length
+
+        // 새 이미지 로드 후 페이드 인
         setTimeout(() => {
           imageElement.style.opacity = '1'
-          this.isTransitioning = false // 전환 완료 표시 추가
+          this.isTransitioning = false // 전환 완료 표시
         }, 50)
       }, 200)
     },
