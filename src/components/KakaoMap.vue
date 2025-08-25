@@ -258,21 +258,21 @@ export default {
 
     // 다음 이미지로
     nextImage () {
-      if (this.isTransitioning) return; // 전환 중이면 추가 클릭 무시
-      this.isTransitioning = true;
-      if (this.imageFilenames.length > 0) {
-        this.currentImageIndex = (this.currentImageIndex + 1) % this.imageFilenames.length
-      }
+      if (this.isTransitioning) return // 전환 중이면 추가 클릭 무시
+      this.isTransitioning = true
+
       // 먼저 현재 이미지 페이드 아웃
       const imageElement = document.querySelector('.slider-image')
       imageElement.style.opacity = '0'
 
-      // 페이드 아웃 후 이미지 변경
+      // 페이드 아웃 후 이미지 변경 (인덱스는 한 번만 변경)
       setTimeout(() => {
         this.currentImageIndex = (this.currentImageIndex + 1) % this.imageFilenames.length
+
         // 새 이미지 로드 후 페이드 인
         setTimeout(() => {
           imageElement.style.opacity = '1'
+          this.isTransitioning = false // 전환 완료
         }, 50)
       }, 200)
     },
@@ -289,11 +289,23 @@ export default {
 
     // 이전 이미지로
     prevImage () {
-      if (this.isTransitioning) return;
-      this.isTransitioning = true;
-      if (this.imageFilenames.length > 0) {
-        this.currentImageIndex = (this.currentImageIndex - 1 + this.imageFilenames.length) % this.imageFilenames.length
-      }
+      if (this.isTransitioning) return
+        this.isTransitioning = true
+        if (this.imageFilenames.length > 0) {
+          this.currentImageIndex = (this.currentImageIndex - 1 + this.imageFilenames.length) % this.imageFilenames.length
+        }
+
+        // 애니메이션 추가하고 전환 완료 표시
+        const imageElement = document.querySelector('.slider-image')
+        imageElement.style.opacity = '0'
+
+        setTimeout(() => {
+          // 이미지 변경 후 페이드 인
+          setTimeout(() => {
+            imageElement.style.opacity = '1'
+            this.isTransitioning = false // 전환 완료 표시 추가
+          }, 50)
+        }, 200)
     },
 
     // 특정 이미지로 이동
