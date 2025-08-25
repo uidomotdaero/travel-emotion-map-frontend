@@ -67,12 +67,13 @@
                                             @touchend="onDragEnd"
                                             @touchmove="onDragMove">
             <!-- 이미지 표시 -->
-            <img :src="`/travel-emotion-map-frontend/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" />
+            <!--<img :src="`/travel-emotion-map-frontend/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" />-->
+            <img :src="`/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" />
             <!-- 슬라이드 내비게이션 버튼 (화살표 아이콘 사용) -->
-            <button v-if="imageFilenames.length > 1" @click="prevImage" class="nav-btn prev">
+            <button v-if="imageFilenames.length > 1"  @click.stop="prevImage" class="nav-btn prev">
               <i class="fas fa-chevron-left"></i> <!-- 이전 화살표 아이콘 -->
             </button>
-            <button v-if="imageFilenames.length > 1" @click="nextImage" class="nav-btn next">
+            <button v-if="imageFilenames.length > 1" @click.stop="nextImage" class="nav-btn next">
               <i class="fas fa-chevron-right"></i> <!-- 다음 화살표 아이콘 -->
             </button>
           </div>
@@ -296,15 +297,13 @@ export default {
       const imageElement = document.querySelector('.slider-image')
       imageElement.style.opacity = '0'
 
-      // 페이드 아웃 후 이미지 변경
       setTimeout(() => {
-        // 이전 이미지로 인덱스 변경 (뒤로 가기)
+        // 여기가 문제야! 인덱스가 감소해야 함
         this.currentImageIndex = (this.currentImageIndex - 1 + this.imageFilenames.length) % this.imageFilenames.length
 
-        // 새 이미지 로드 후 페이드 인
         setTimeout(() => {
           imageElement.style.opacity = '1'
-          this.isTransitioning = false // 전환 완료 표시
+          this.isTransitioning = false
         }, 50)
       }, 200)
     },
@@ -357,9 +356,9 @@ export default {
     // 내 감정 데이터 로드 및 마커 생성 (기존 함수를 분리/수정)
     loadMyEmotions () {
       // local
-      // axios.get('/api/travel-emotions')
+      axios.get('/api/travel-emotions')
       // prod
-      axios.get('https://travel-emotion-map-backend.onrender.com/api/travel-emotions')
+      //  axios.get('https://travel-emotion-map-backend.onrender.com/api/travel-emotions')
         .then(response => {
           this.createMarkers(response.data, 'my')
           // 여기서 마커를 지도에 표시해줘야 해!
@@ -993,9 +992,9 @@ export default {
       const dragDistance = this.dragEndX - this.dragStartX
       const threshold = 50 // 드래그 인식 최소 거리(px)
       if (dragDistance > threshold) {
-        this.prevImage() // 왼쪽에서 오른쪽으로 드래그 => 이전 이미지
+        this.prevImage() // 오른쪽에서 왼쪽으로 드래그 => 이전 이미지로 변경
       } else if (dragDistance < -threshold) {
-        this.nextImage() // 오른쪽에서 왼쪽으로 드래그 => 다음 이미지
+        this.nextImage() // 왼쪽에서 오른쪽으로 드래그 => 다음 이미지로 변경
       }
       this.isDragging = false
       this.dragStartX = 0
