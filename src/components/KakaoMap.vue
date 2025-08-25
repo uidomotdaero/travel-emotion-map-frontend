@@ -1523,9 +1523,10 @@ html {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.8); /* 검정색 투명 배경 */
   display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 5100; /* 부모 모달보다 높은 값으로 설정 (부모가 1000이면 이건 더 높게) */
+  justify-content: center; /* 가로 중앙 정렬 유지 */
+  align-items: flex-start; /* ✨ 이걸 flex-start로 변경 */
+  padding-top: 10vh; /* ✨ 그리고 위에서부터 여백을 줘! */
+  z-index: 9999;
 }
 
 /* image-modal-content: 모달 안의 내용 (이미지+닫기 버튼) */
