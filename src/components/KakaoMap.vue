@@ -68,14 +68,18 @@
                                             @touchmove="onDragMove">
             <!-- 이미지 표시 -->
             <!--<img :src="`/travel-emotion-map-frontend/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" />-->
-            <img :src="`/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" />
+            <img :src="`/images/${currentImageFilename}`" alt="여행 사진" class="slider-image" @click.stop="openImageModal(currentImageFilename)"/>
             <!-- 슬라이드 내비게이션 버튼 (화살표 아이콘 사용) -->
-            <button v-if="imageFilenames.length > 1"  @click.stop="prevImage" class="nav-btn prev">
-              <i class="fas fa-chevron-left"></i> <!-- 이전 화살표 아이콘 -->
-            </button>
-            <button v-if="imageFilenames.length > 1" @click.stop="nextImage" class="nav-btn next">
-              <i class="fas fa-chevron-right"></i> <!-- 다음 화살표 아이콘 -->
-            </button>
+
+            <!-- ✨ 새로 추가할 이미지 모달 영역 -->
+            <transition name="fade">
+              <div v-if="showModal" class="image-modal-overlay" @click.self="closeImageModal">
+                <div class="image-modal-content">
+                  <img :src="modalImageUrl" alt="확대 이미지" class="modal-image" />
+                  <button class="close-modal-btn" @click="closeImageModal">X</button>
+                </div>
+              </div>
+            </transition>
           </div>
 
           <!-- 슬라이드 페이지네이션 점 (갯수가 1개 이상일 때만 표시) -->
@@ -137,7 +141,12 @@ export default {
       dragStartX: 0,
       dragEndX: 0,
       // 기존 데이터...
-      linkCopied: false
+      linkCopied: false,
+      isTransitioning: false, // 이렇게 false로 초기화되어 있어야 함!
+
+      // ✨ 모달 관련 데이터 추가
+      showModal: false, // 모달 표시 여부
+      modalImageUrl: '' // 모달에 보여줄 이미지 URL
     }
   },
   mounted () {
@@ -298,12 +307,12 @@ export default {
       imageElement.style.opacity = '0'
 
       setTimeout(() => {
-        // 여기가 문제야! 인덱스가 감소해야 함
         this.currentImageIndex = (this.currentImageIndex - 1 + this.imageFilenames.length) % this.imageFilenames.length
 
+        // 새 이미지 로드 후 페이드 인
         setTimeout(() => {
           imageElement.style.opacity = '1'
-          this.isTransitioning = false
+          this.isTransitioning = false // 전환 완료
         }, 50)
       }, 200)
     },
@@ -356,9 +365,9 @@ export default {
     // 내 감정 데이터 로드 및 마커 생성 (기존 함수를 분리/수정)
     loadMyEmotions () {
       // local
-      axios.get('/api/travel-emotions')
+      // axios.get('/api/travel-emotions')
       // prod
-      //  axios.get('https://travel-emotion-map-backend.onrender.com/api/travel-emotions')
+      axios.get('https://travel-emotion-map-backend.onrender.com/api/travel-emotions')
         .then(response => {
           this.createMarkers(response.data, 'my')
           // 여기서 마커를 지도에 표시해줘야 해!
@@ -980,14 +989,17 @@ export default {
       return `https://www.youtube.com/embed/${videoId}`
     },
     onDragStart (event) {
+      if (this.showModal) return
       this.isDragging = true
       this.dragStartX = event.type.includes('mouse') ? event.clientX : event.touches[0].clientX
     },
     onDragMove (event) {
+      if (this.showModal) return
       if (!this.isDragging) return
       this.dragEndX = event.type.includes('mouse') ? event.clientX : event.touches[0].clientX
     },
     onDragEnd () {
+      if (this.showModal) return
       if (!this.isDragging) return
       const dragDistance = this.dragEndX - this.dragStartX
       const threshold = 50 // 드래그 인식 최소 거리(px)
@@ -999,6 +1011,21 @@ export default {
       this.isDragging = false
       this.dragStartX = 0
       this.dragEndX = 0
+    },
+
+    // ✨ 모달 열기 함수
+    openImageModal (filename) {
+      // 이미지가 public/images 폴더에 있다면 이렇게 경로를 구성
+      // this.modalImageUrl = `/images/${filename}`
+      // 만약 GitHub Pages에서 `/travel-emotion-map-frontend/images/` 이런 경로를 사용한다면
+      this.modalImageUrl = `/travel-emotion-map-frontend/images/${filename}`
+      this.showModal = true
+    },
+
+    // ✨ 모달 닫기 함수
+    closeImageModal () {
+      this.showModal = false
+      this.modalImageUrl = '' // 이미지 URL 초기화 (선택 사항)
     }
   },
   computed: {
@@ -1486,5 +1513,67 @@ html {
 .fa-cloud { color: #6c757d; }
 .fa-cloud-rain { color: #0099cc; }
 .fa-snowflake { color: #99ccff; }
+
+/* image-modal-overlay: 전체 화면을 덮는 배경 */
+.image-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8); /* 검정색 투명 배경 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5100; /* 부모 모달보다 높은 값으로 설정 (부모가 1000이면 이건 더 높게) */
+}
+
+/* image-modal-content: 모달 안의 내용 (이미지+닫기 버튼) */
+.image-modal-content {
+  position: relative;
+  max-width: 90%; /* 최대 너비 */
+  max-height: 90%; /* 최대 높이 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* modal-image: 확대된 이미지 */
+.modal-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* 이미지 비율 유지하며 내용에 맞춤 */
+}
+
+/* close-modal-btn: 닫기 버튼 */
+.close-modal-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s;
+}
+
+.close-modal-btn:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* 모달 등장/사라짐 애니메이션 (선택 사항) */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
 
 </style>
