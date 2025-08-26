@@ -176,7 +176,7 @@ export default {
       // 초기 전국 시도 오버뷰 GeoJSON 로드
       this.loadProvinceOverviewGeoJson()
       // this.fetchEmotionData() // 이 함수가 마커를 또 생성하고 있다면 제거
-      // this.loadMyEmotions()   // 이 함수도 여기서 직접 호출할 필요 없어요
+      // this.loadMyEmotions()  // 이 함수도 여기서 직접 호출할 필요 없다.
 
       // 초기에는 loadAndDisplayLayer만 호출 (내 감정 스팟만 보이도록)
       this.loadAndDisplayLayer()
@@ -352,7 +352,7 @@ export default {
           } else if (type === 'subscriber') {
             this.subscriberEmotionsData = response.data
             this.createMarkers(this.subscriberEmotionsData, 'subscriber')
-            this.subscriberMarkers.forEach(marker => marker.setMap(this.map)) // 현재 선택된 레이어만 표시
+            this.subscriberMarkers.forEach(marker => marker.setMap(this.map)) // 현재 선택된 레이어만 표시 -->
           }
         })
         .catch(error => {
